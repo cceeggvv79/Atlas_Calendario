@@ -1,0 +1,36 @@
+name: Actualizar calendario Atlas
+
+on:
+  schedule:
+    # Corre todos los días a las 09:00 UTC (~3am hora Jalisco)
+    - cron: "0 9 * * *"
+  workflow_dispatch: {}  # también lo puedes correr manualmente desde GitHub
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repo
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install requests ics
+
+      - name: Generar calendario
+        run: python generate_calendar.py
+
+      - name: Publicar cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add atlas.ics
+          git diff --quiet && git diff --staged --quiet || git commit -m "Actualiza calendario"
+          git push
